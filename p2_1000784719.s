@@ -53,12 +53,14 @@ _printf:
 _count:
     PUSH {LR}
     CMP R1, #0               @ if (n==0)
-    BLEQ R0, #1              @     return 1
+    MOV R0, #1               @     R0 = 1
+    POP {PC}                 @     return R0
     CMP R1, #0               @ else if(n<0)
-    MOVLE R0, #0             @     return 0
+    MOVLE R0, #0             @     R0 = 0
+    POP {PC}                 @     return R0
     CMP R2, #0               @ else if (m==0)
-    BLEQ R0, #0              @     return 0
-    
+    MOV R0, #0               @     R0 = 0
+    POP {PC}                 @     return R0
     
     
     
