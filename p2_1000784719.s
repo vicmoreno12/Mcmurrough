@@ -13,13 +13,19 @@
 
 main:
     BL _scanf
+    MOV R9, R0      @ n = blah
+    BL _scanf     
+    MOV R11, R0     @ m = blah
+    MOV R1, R9      @ n
+    MOV R2, R11     @ m
+    @MOV R3, R0
+    BL _count
     MOV R8, R0
-    BL _scanf
-    MOV R9, R0
+    LDR R0, =printf_str
     MOV R1, R8
-    MOV R2, R9s
-    MOV R3, R0
-    BL _print
+    BL printf
+    
+    
     BL main
 
 #20
@@ -53,22 +59,33 @@ _printf:
 _count:
     PUSH {LR}
     CMP R1, #0               @ if (n==0)
-    MOV R0, #1               @     R0 = 1
-    POP {PC}                 @     return R0
+    MOVEQ R0, #1             @     R0 = 1
+    POPEQ {PC}               @     return R0
     CMP R1, #0               @ else if(n<0)
-    MOVLE R0, #0             @     R0 = 0
-    POP {PC}                 @     return R0
+    MOVLT R0, #0             @     R0 = 0
+    POPLT {PC}               @     return R0
     CMP R2, #0               @ else if (m==0)
-    MOV R0, #0               @     R0 = 0
-    POP {PC}                 @     return R0
+    MOVEQ R0, #0             @     R0 = 0
+    POPEQ {PC}               @     return R0
     
-    
-    
-    
-    
-    
-    
-    
+                             @ recursion now
+    PUSH {R1}                @ Backing up
+    PUSH {R2}                @ backing up
+    SUB R1, R1, R2           @ new n
+    BL _count                @ count(n-m, m)
+    POP {R2}  
+    POP {R1}
+    MOV R3, R0
+    PUSH {R1}
+    PUSH {R2}
+    PUSH {R3}
+    SUB R2, R2, #1   
+    BL _count       @ count (, m-1)
+    POP {R3}
+    POP {R2}
+    POP {R1}
+    ADD R3, R3, R0
+    MOV R0, R3
     
     
     
@@ -107,6 +124,8 @@ _max:
 
 
 .data
+
+
 printf_str:     .asciz    "Result: %d\n"
 format_str:     .asciz    "%d"
 read_char:      .ascii    "  "
