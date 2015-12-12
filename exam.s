@@ -12,42 +12,35 @@
 .func main
 
 main:
-    BL _scanf
-    MOV R9, R0      @ n = blah
-    #MOV R2, R9      @ n
-    MOV R7, R0
     MOV R0, #0
+    MOV R3, #0
     BL _generate
     MOV R8, R0
     LDR R0, =printf_str
     MOV R1, R8
     BL _printMyArray
-    
+    MOV R1, R0
+    BL _printAdd
     BL _exit
 
 
 _generate:
     PUSH {LR}
     
-
-    CMP R0, #20
+    MOV R4, #0         @ i = 0
     writeloop:
-    CMP R0, #20
-    POPEQ {PC} 
-    LDR R1, =a_array
-    LSL R2, R0, #2
-    ADD R2, R1, R2
-    ADD R8, R7, R0
-    STR R8, [R2]
-    ADD R2, R2, #4
-    ADD R8, R8, #1
-    MOV R11, #10   @look at this
-    SUB R8, R11, R8
-    STR R8, [R2]
-    ADD R0, R0, #2
+    CMP R4, #10        @ if (i <10)
+    POPEQ {PC}         @ if R3 = 10, leave
+    LDR R6, =a_array   @address of a_array
+    LSL R7, R4, #2
+    ADD R7, R6, R7
+    BL _scanf          @ get user input
+    MOV R5, R0         @ puts user input to R8
+    STR R5, [R7]       @ a_array[i] = R8
+    ADD R4, R4, #1     @ i++;
+    
     B writeloop
     
-    POP {PC}
 
 #27
 _exit:  
@@ -61,14 +54,6 @@ _exit:
 
 
 #38
-_prompt:
-    MOV R7, #4              @ write syscall, 4
-    MOV R0, #1              @ output stream to monitor, 1
-    MOV R2, #31             @ print string length
-    LDR R1, =prompt_str     @ string at label prompt_str:
-    SWI 0                   @ execute syscall
-    MOV PC, LR              @ return
-
 #47
 _printf:
     PUSH {LR}               @ store LR since printf call overwrites
@@ -79,12 +64,23 @@ _printf:
     BL printf               @ call printf
     POP {PC}                @ return
 #54
+_printAdd:
+    PUSH {LR}               @ store LR since printf call overwrites
+    LDR R0, =printf_Add     @ R0 contains formatted string address
+    MOV R1, R1              @
+    BL printf               @ call printf
+    POP {PC}                @ return
+
+
+
 #80
 _printMyArray:
     PUSH {LR}
-    MOV R0, #0
+    MOV R0, #0              @ i = 0
+    MOV R8, #0              @ sum = 0
     readloop:
-    CMP R0, #20             @ check to see if we are done iterating
+    CMP R0, #10             @ check to see if we are done iterating
+    MOVEQ R0, R8
     POPEQ {PC}              @ exit loop if done
     LDR R1, =a_array        @ get address of a
     LSL R2, R0, #2          @ multiply index*4 to get array offset
@@ -95,6 +91,7 @@ _printMyArray:
     PUSH {R2}               @ backup register before printf
     MOV R2, R1              @ move array value to R2 for printf
     MOV R1, R0              @ move array index to R1 for printf
+    ADD R8, R8, R2          @ sum+= a_array[i]
     BL  _printf             @ branch to print procedure with return
     POP {R2}                @ restore register
     POP {R1}                @ restore register
@@ -102,12 +99,6 @@ _printMyArray:
     ADD R0, R0, #1          @ increment index
     B   readloop            @ branch to next loop iteration
 
-    POP {PC}
-    
-    
-    
-    
-    
     
 
 
@@ -122,14 +113,14 @@ _scanf:
     POP {PC}
 
 
+
+
 .data
 
 .balign 4
 a_array:              .skip     40
-printf_str:     .asciz    "a/b[%d] = %d / %d\n"
+printf_str:     .asciz    "a_array[%d] = %d\n"
+printf_Add:     .asciz    "sum = %d\n"
 format_str:     .asciz    "%d"
-read_char:      .ascii    "  "
 prompt_str:      .ascii   "Enter the @ character: "
-equal_str:      .asciz    "CORRECT \n"
-nequal_str:     .asciz    "INCORRECT: %c \n"
 exit_str:       .ascii    "Terminate program.\n"
